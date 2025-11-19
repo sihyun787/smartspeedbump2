@@ -1,412 +1,130 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>스마트 과속방지턱 시뮬레이터</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
-      background: #111827;
-      border-radius: 16px;
-      padding: 24px 24px 28px;
-      width: 900px;
-      max-width: 95vw;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    }
-    h1 {
-      margin: 0 0 12px;
-      font-size: 1.5rem;
-    }
-    .subtitle {
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-      color: #9ca3af;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 1.1fr;
-      gap: 20px;
-    }
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: 1fr; }
-    }
+<meta charset="UTF-8">
+<title>Smart Speed Bump Simulator</title>
+<style>
+  body {
+    font-family: Arial;
+    background: #f0f0f0;
+  }
 
-    /* 입력 영역 */
-    .panel {
-      background: #020617;
-      border-radius: 14px;
-      padding: 16px 18px 18px;
-      border: 1px solid #1f2937;
-    }
-    .panel h2 {
-      margin: 0 0 10px;
-      font-size: 1.1rem;
-    }
-    label {
-      font-size: 0.9rem;
-      color: #9ca3af;
-    }
-    .speed-input-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin: 10px 0 14px;
-    }
-    input[type="number"] {
-      width: 90px;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.95rem;
-    }
-    input[type="number"]:focus {
-      outline: none;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 1px #38bdf8;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    .speed-display {
-      margin-top: 4px;
-      font-size: 0.9rem;
-      color: #9ca3af;
-    }
-    .status-badges {
-      margin-top: 10px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 0.8rem;
-    }
-    .badge {
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #374151;
-    }
-    .badge.safe { border-color: #22c55e33; color: #4ade80; }
-    .badge.warn { border-color: #facc1533; color: #fde68a; }
-    .badge.danger { border-color: #f9731633; color: #fb923c; }
+  h1 { text-align: center; }
 
-    button {
-      margin-top: 12px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      background: #38bdf8;
-      color: #0b1120;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.1s;
-    }
-    button:hover {
-      background: #0ea5e9;
-      box-shadow: 0 8px 18px rgba(56,189,248,0.35);
-      transform: translateY(-1px);
-    }
-    button:active {
-      transform: translateY(1px);
-      box-shadow: none;
-    }
+  #road {
+    width: 100%;
+    height: 120px;
+    background: #555;
+    position: relative;
+    overflow: hidden;
+    margin-top: 40px;
+  }
 
-    /* 시각화 영역 */
-    .road-wrapper {
-      position: relative;
-      margin-top: 6px;
-      background: #020617;
-      border-radius: 14px;
-      border: 1px solid #1f2937;
-      padding: 14px 14px 16px;
-    }
-    .road {
-      position: relative;
-      height: 120px;
-      background: linear-gradient(#111827, #020617);
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #1f2937;
-    }
-    .lane {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 60px;
-      height: 4px;
-      background: #111827;
-    }
-    .lane::before {
-      content: "";
-      position: absolute;
-      left: -40px;
-      right: -40px;
-      top: 1px;
-      height: 2px;
-      background-image: linear-gradient(to right, #6b7280 50%, transparent 50%);
-      background-size: 16px 2px;
-      opacity: 0.6;
-    }
-    .bump {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 60px;
-      width: 80px;
-      height: 10px; /* 기본 높이 */
-      background: #facc15;
-      border-radius: 40px 40px 4px 4px;
-      box-shadow: 0 8px 14px rgba(0,0,0,0.6);
-      transition: height 0.3s ease, background 0.3s ease, bottom 0.3s ease;
-    }
-    .bump.safe {
-      background: #22c55e;
-      height: 8px;
-      bottom: 62px;
-    }
-    .bump.warn {
-      background: #eab308;
-      height: 18px;
-      bottom: 66px;
-    }
-    .bump.danger {
-      background: #f97316;
-      height: 30px;
-      bottom: 72px;
-    }
+  #car {
+    width: 100px;
+    height: 50px;
+    background: red;
+    position: absolute;
+    top: 35px;
+    left: 0;
+    border-radius: 10px;
+    transition: transform 0.1s;
+  }
 
-    .car {
-      position: absolute;
-      bottom: 72px;
-      left: -60px;
-      width: 50px;
-      height: 26px;
-      background: #38bdf8;
-      border-radius: 8px 10px 6px 6px;
-      box-shadow: 0 8px 10px rgba(0,0,0,0.6);
-    }
-    .car::before,
-    .car::after {
-      content: "";
-      position: absolute;
-      bottom: -7px;
-      width: 14px;
-      height: 14px;
-      background: #020617;
-      border-radius: 50%;
-      box-shadow: 0 0 0 2px #111827;
-    }
-    .car::before { left: 4px; }
-    .car::after { right: 4px; }
-    .car-window {
-      position: absolute;
-      right: 4px;
-      top: 4px;
-      width: 18px;
-      height: 10px;
-      background: #e0f2fe;
-      border-radius: 4px;
-    }
+  #speedBump {
+    width: 120px;
+    height: 10px;
+    background: yellow;
+    position: absolute;
+    top: 55px;
+    left: 55%;
+    transition: 0.3s;
+  }
 
-    @keyframes drive {
-      from { left: -60px; }
-      to   { left: calc(100% + 20px); }
-    }
-    .car.drive {
-      animation: drive 2.2s linear;
-    }
+  #generator {
+    width: 50px;
+    height: 50px;
+    border: 5px solid black;
+    border-radius: 50%;
+    position: absolute;
+    top: 15px;
+    left: 75%;
+    animation: spin 0s linear infinite;
+  }
 
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      font-size: 0.85rem;
-      color: #9ca3af;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .status-text {
-      font-weight: 600;
-    }
-    .status-text.safe { color: #4ade80; }
-    .status-text.warn { color: #fde68a; }
-    .status-text.danger { color: #fb923c; }
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
 
-    .energy-bar {
-      flex: 1;
-      min-width: 180px;
-    }
-    .energy-label {
-      margin-bottom: 4px;
-    }
-    .energy-outer {
-      width: 100%;
-      height: 10px;
-      border-radius: 999px;
-      background: #020617;
-      border: 1px solid #1f2937;
-      overflow: hidden;
-    }
-    .energy-inner {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(to right, #22c55e, #fde047, #fb923c);
-      transition: width 0.3s ease;
-    }
-  </style>
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>스마트 과속방지턱 웹 시뮬레이터</h1>
-    <p class="subtitle">
-      현재 주행 속도를 입력하면, 속도에 따라 방지턱의 반응과 이론적 발전량 변화를 시각적으로 보여주는 데모입니다.
-    </p>
 
-    <div class="grid">
-      <!-- 좌측: 입력 패널 -->
-      <div class="panel">
-        <h2>① 속도 입력</h2>
-        <label for="speedRange">현재 속도 (km/h)</label>
-        <div class="speed-input-row">
-          <input type="range" id="speedRange" min="0" max="80" value="30">
-          <input type="number" id="speedInput" min="0" max="80" value="30">
-          <span>km/h</span>
-        </div>
-        <div class="speed-display" id="speedDisplay">
-          현재 속도: <strong>30 km/h</strong>
-        </div>
+<h1>🚗 스마트 과속방지턱 시뮬레이터</h1>
 
-        <div class="status-badges">
-          <span class="badge safe">30km/h 미만: 안전 주행 (방지턱 낮음)</span>
-          <span class="badge warn">30~50km/h: 주의 (방지턱 중간 높이)</span>
-          <span class="badge danger">50km/h 이상: 과속 (방지턱 크게 작동)</span>
-        </div>
+<p style="text-align:center;">자동차 속도를 입력하면 실제로 달리며, 속도 초과 시 방지턱 상승 + 발전기 회전!</p>
 
-        <button id="simulateBtn">차량 통과 시뮬레이션 실행</button>
-      </div>
+<div style="text-align:center;">
+  <input id="speed" type="number" placeholder="속도 입력 (km/h)">
+  <button onclick="start()">🚀 출발</button>
+</div>
 
-      <!-- 우측: 시각화 패널 -->
-      <div class="road-wrapper">
-        <h2>② 방지턱 반응 & 발전량</h2>
-        <div class="road">
-          <div class="lane"></div>
-          <div class="bump safe" id="bump"></div>
-          <div class="car" id="car">
-            <div class="car-window"></div>
-          </div>
-        </div>
-        <div class="info-row">
-          <div id="statusText" class="status-text safe">
-            상태: 안전 주행 구간 (방지턱 거의 작동하지 않음)
-          </div>
-          <div class="energy-bar">
-            <div class="energy-label">
-              이론적 발전량 (상대값): <span id="energyValue">0%</span>
-            </div>
-            <div class="energy-outer">
-              <div class="energy-inner" id="energyInner"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div id="road">
+  <div id="car"></div>
+  <div id="speedBump"></div>
+  <div id="generator"></div>
+</div>
 
-  </div>
+<p style="text-align:center;" id="status"></p>
 
-  <script>
-    const speedRange = document.getElementById('speedRange');
-    const speedInput = document.getElementById('speedInput');
-    const speedDisplay = document.getElementById('speedDisplay');
-    const bump = document.getElementById('bump');
-    const statusText = document.getElementById('statusText');
-    const energyInner = document.getElementById('energyInner');
-    const energyValue = document.getElementById('energyValue');
-    const car = document.getElementById('car');
-    const simulateBtn = document.getElementById('simulateBtn');
+<script>
+let car = document.getElementById("car");
+let bump = document.getElementById("speedBump");
+let gen = document.getElementById("generator");
+let statusText = document.getElementById("status");
 
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
+function start() {
+    let speed = Number(document.getElementById("speed").value);
+
+    if (!speed) {
+        alert("속도를 입력하세요!");
+        return;
     }
 
-    function updateSimulation(speed) {
-      speed = clamp(speed, 0, 80);
-      speedRange.value = speed;
-      speedInput.value = speed;
-      speedDisplay.innerHTML = `현재 속도: <strong>${speed} km/h</strong>`;
+    let pxPerFrame = speed / 2; // 속도에 따른 이동량(대충 기준)
 
-      let mode;          // 'safe' | 'warn' | 'danger'
-      let bumpFactor;    // 0~1: 방지턱 작동 강도
-      if (speed < 30) {
-        mode = 'safe';
-        bumpFactor = 0.2;
-      } else if (speed < 50) {
-        mode = 'warn';
-        bumpFactor = 0.6;
-      } else {
-        mode = 'danger';
-        bumpFactor = 1.0;
-      }
+    let x = 0;
+    let interval = setInterval(() => {
+        x += pxPerFrame;
+        car.style.left = x + "px";
 
-      // 방지턱 클래스 변경
-      bump.classList.remove('safe', 'warn', 'danger');
-      bump.classList.add(mode);
+        // 방지턱 위치 근처
+        if (x > window.innerWidth * 0.52 && x < window.innerWidth * 0.60) {
+            if (speed >= 30) {
+                bump.style.height = "40px";    // 방지턱 상승
+                gen.style.animationDuration = "0.2s";  // 발전기 빠르게 회전
+                statusText.innerHTML = "⚠ 과속! 방지턱 상승 + 발전기 가동";
+            } else {
+                bump.style.height = "10px";    // 그대로
+                gen.style.animationDuration = "0s"; // 회전 X
+                statusText.innerHTML = "✔ 안전 속도. 방지턱 유지";
+            }
+        }
 
-      // 단순 모델: 발전량 ∝ 속도 × 방지턱 작동 강도
-      const rawEnergy = speed * bumpFactor;    // 대략적인 값
-      const maxEnergy = 80 * 1.0;             // 최대 속도 80, bumpFactor 1.0 기준
-      const energyPercent = Math.round((rawEnergy / maxEnergy) * 100);
+        // 발전기 파트 밟고 지나가기
+        if (x > window.innerWidth * 0.70 && speed >= 30) {
+            gen.style.animationDuration = "0.1s"; // 더 빠르게 회전
+        }
 
-      const clampedPercent = clamp(energyPercent, 0, 100);
-      energyInner.style.width = clampedPercent + '%';
-      energyValue.textContent = clampedPercent + '%';
+        if (x > window.innerWidth) {
+            clearInterval(interval);
+            gen.style.animationDuration = "0s";
+            statusText.innerHTML = "🚘 차량 통과 완료";
+        }
+    }, 20);
+}
+</script>
 
-      // 상태 문구 업데이트
-      statusText.classList.remove('safe', 'warn', 'danger');
-      statusText.classList.add(mode);
-
-      if (mode === 'safe') {
-        statusText.textContent =
-          '상태: 안전 주행 구간 – 방지턱이 거의 작동하지 않아 승차감이 좋고 발전량은 적습니다.';
-      } else if (mode === 'warn') {
-        statusText.textContent =
-          '상태: 제한 속도 근처 – 방지턱이 중간 정도로 작동하며, 승차감과 발전량이 균형을 이룹니다.';
-      } else {
-        statusText.textContent =
-          '상태: 과속 구간 – 방지턱이 강하게 작동하여 승차감은 나쁘지만 발전량이 최대에 가깝습니다.';
-      }
-    }
-
-    // 입력 이벤트
-    speedRange.addEventListener('input', e => {
-      updateSimulation(parseInt(e.target.value, 10) || 0);
-    });
-    speedInput.addEventListener('change', e => {
-      updateSimulation(parseInt(e.target.value, 10) || 0);
-    });
-
-    // 차량 주행 애니메이션
-    simulateBtn.addEventListener('click', () => {
-      // 클래스를 제거했다가 다시 붙여서 애니메이션 리셋
-      car.classList.remove('drive');
-      void car.offsetWidth; // reflow 강제
-      car.classList.add('drive');
-    });
-
-    // 초기 상태
-    updateSimulation(30);
-  </script>
 </body>
 </html>
 
