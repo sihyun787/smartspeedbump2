@@ -4,78 +4,121 @@
 <meta charset="UTF-8">
 <title>Smart Speed Bump Simulator</title>
 <style>
-  body {
-    font-family: Arial;
-    background: #f0f0f0;
-  }
+    body {
+        margin: 0;
+        padding: 0;
+        background: #e9eef3;
+        font-family: Arial, sans-serif;
+    }
 
-  h1 { text-align: center; }
+    header {
+        text-align: center;
+        padding: 25px;
+        font-size: 28px;
+        background: #2d2f38;
+        color: white;
+        font-weight: bold;
+    }
 
-  #road {
-    width: 100%;
-    height: 120px;
-    background: #555;
-    position: relative;
-    overflow: hidden;
-    margin-top: 40px;
-  }
+    .ui {
+        text-align: center;
+        margin-top: 25px;
+    }
 
-  #car {
-    width: 100px;
-    height: 50px;
-    background: red;
-    position: absolute;
-    top: 35px;
-    left: 0;
-    border-radius: 10px;
-    transition: transform 0.1s;
-  }
+    input {
+        padding: 8px 14px;
+        font-size: 18px;
+        width: 180px;
+        border-radius: 6px;
+        border: 1px solid #aaa;
+    }
 
-  #speedBump {
-    width: 120px;
-    height: 10px;
-    background: yellow;
-    position: absolute;
-    top: 55px;
-    left: 55%;
-    transition: 0.3s;
-  }
+    button {
+        padding: 10px 18px;
+        font-size: 18px;
+        margin-left: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
 
-  #generator {
-    width: 50px;
-    height: 50px;
-    border: 5px solid black;
-    border-radius: 50%;
-    position: absolute;
-    top: 15px;
-    left: 75%;
-    animation: spin 0s linear infinite;
-  }
+    button:hover {
+        background: #0065d4;
+    }
 
-  @keyframes spin {
-    100% { transform: rotate(360deg); }
-  }
+    #road {
+        width: 100%;
+        height: 160px;
+        background: #3e3e3e;
+        position: relative;
+        margin-top: 40px;
+        overflow: hidden;
+    }
+
+    #car {
+        width: 110px;
+        height: 55px;
+        position: absolute;
+        top: 70px;
+        left: 0px;
+        background: #ff4d4d;
+        border-radius: 10px;
+        transition: transform 0.1s;
+    }
+
+    #speedBump {
+        width: 120px;
+        height: 12px;
+        background: #ffc400;
+        position: absolute;
+        top: 90px;
+        left: 55%;
+        border-radius: 5px;
+        transition: 0.4s;
+    }
+
+    #generator {
+        width: 55px;
+        height: 55px;
+        border: 5px solid #222;
+        border-radius: 50%;
+        position: absolute;
+        top: 45px;
+        left: 80%;
+        animation: spin 0s linear infinite;
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    #status {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 20px;
+        font-weight: bold;
+    }
 
 </style>
 </head>
 <body>
 
-<h1>🚗 스마트 과속방지턱 시뮬레이터</h1>
+<header>🚗 스마트 과속방지턱 시뮬레이터</header>
 
-<p style="text-align:center;">자동차 속도를 입력하면 실제로 달리며, 속도 초과 시 방지턱 상승 + 발전기 회전!</p>
-
-<div style="text-align:center;">
-  <input id="speed" type="number" placeholder="속도 입력 (km/h)">
-  <button onclick="start()">🚀 출발</button>
+<div class="ui">
+    <input id="speed" type="number" placeholder="속도 입력 (km/h)">
+    <button onclick="start()">🚀 출발</button>
 </div>
 
 <div id="road">
-  <div id="car"></div>
-  <div id="speedBump"></div>
-  <div id="generator"></div>
+    <div id="car"></div>
+    <div id="speedBump"></div>
+    <div id="generator"></div>
 </div>
 
-<p style="text-align:center;" id="status"></p>
+<p id="status"></p>
 
 <script>
 let car = document.getElementById("car");
@@ -85,46 +128,66 @@ let statusText = document.getElementById("status");
 
 function start() {
     let speed = Number(document.getElementById("speed").value);
-
     if (!speed) {
         alert("속도를 입력하세요!");
         return;
     }
 
-    let pxPerFrame = speed / 2; // 속도에 따른 이동량(대충 기준)
-
     let x = 0;
+    let pxPerFrame = speed / 2;
+
+    // 초기화
+    car.style.top = "70px";
+    gen.style.animationDuration = "0s";
+    bump.style.height = "12px";
+    statusText.innerHTML = "";
+
     let interval = setInterval(() => {
         x += pxPerFrame;
         car.style.left = x + "px";
 
-        // 방지턱 위치 근처
-        if (x > window.innerWidth * 0.52 && x < window.innerWidth * 0.60) {
+        let screen = window.innerWidth;
+
+        // 방지턱 위치
+        let bumpStart = screen * 0.52;
+        let bumpEnd = screen * 0.62;
+
+        // 방지턱 반응
+        if (x > bumpStart && x < bumpEnd) {
             if (speed >= 30) {
-                bump.style.height = "40px";    // 방지턱 상승
-                gen.style.animationDuration = "0.2s";  // 발전기 빠르게 회전
+                bump.style.height = "38px"; // 방지턱 상승
+
+                // 차가 방지턱을 "올라가는" 효과
+                car.style.top = "45px";
+
                 statusText.innerHTML = "⚠ 과속! 방지턱 상승 + 발전기 가동";
+                gen.style.animationDuration = "0.25s";
             } else {
-                bump.style.height = "10px";    // 그대로
-                gen.style.animationDuration = "0s"; // 회전 X
-                statusText.innerHTML = "✔ 안전 속도. 방지턱 유지";
+                bump.style.height = "12px";
+                statusText.innerHTML = "✔ 안전 속도";
             }
         }
 
-        // 발전기 파트 밟고 지나가기
-        if (x > window.innerWidth * 0.70 && speed >= 30) {
-            gen.style.animationDuration = "0.1s"; // 더 빠르게 회전
+        // 방지턱 내려가며 차도 내려옴
+        if (x > bumpEnd) {
+            car.style.top = "70px";  // 원래 높이
         }
 
-        if (x > window.innerWidth) {
-            clearInterval(interval);
-            gen.style.animationDuration = "0s";
-            statusText.innerHTML = "🚘 차량 통과 완료";
+        // 발전기 더 빠르게
+        if (x > screen * 0.75 && speed >= 30) {
+            gen.style.animationDuration = "0.1s";
         }
+
+        // 종료
+        if (x > screen) {
+            clearInterval(interval);
+            statusText.innerHTML = "🚘 차량 통과 완료";
+            gen.style.animationDuration = "0s";
+        }
+
     }, 20);
 }
 </script>
 
 </body>
 </html>
-
